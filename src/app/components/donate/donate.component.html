@@ -1,0 +1,43 @@
+<section>
+    <div>
+        <div class="text-center">Become a donor</div>
+    </div>
+    <div>
+        <form (ngSubmit)="getcode()" [formGroup]="donorForm">
+            <div class="ui equal width form">
+
+                <div class="required field">
+                    <label>First Name</label>
+                    <div class="ui action input" [ngClass]="{'error':!donorForm.controls['firstname'].valid && donorForm.controls['firstname'].touched}">
+                        <input [formControl]="donorForm.controls['firstname']" [(ngModel)]="donorData.firstname" name="firstname" type="text" placeholder="Michael">
+                    </div>
+
+                    <label>Last Name</label>
+                    <div class="ui action input" [ngClass]="{'error':!donorForm.controls['lastname'].valid && donorForm.controls['lastname'].touched}">
+                        <input [formControl]="donorForm.controls['lastname']" [(ngModel)]="donorData.lastname" name="lastname" type="text" placeholder="Phelps">
+                    </div>
+
+                    <label>Contact Number</label>
+                    <div class="ui action input" [ngClass]="{'error':!donorForm.controls['phone'].valid && donorForm.controls['phone'].touched}">
+                        <input [formControl]="donorForm.controls['phone']" [(ngModel)]="donorData.phone" name="phone" type="tel" placeholder="xx xxx xxxx xxx">
+                    </div>
+
+                    <label>Email</label>
+                    <div class="ui action input" [ngClass]="{'error':!donorForm.controls['email'].valid && donorForm.controls['email'].touched}">
+                        <input [formControl]="donorForm.controls['email']" [(ngModel)]="donorData.email" name="email" type="email" placeholder="john@deo.com">
+                    </div>
+
+                    <label>Blood Group</label>
+                    <div class="ui action input" [ngClass]="{'error':!donorForm.controls['blood_group'].valid && donorForm.controls['email'].touched}">
+                        <input [formControl]="donorForm.controls['blood_group']" [(ngModel)]="donorData.blood_group" name="blood_group" type="text" placeholder="AA">
+                    </div>
+                    
+                    <button [ngClass]="{loading: transacting}" [disabled]="!donorForm.valid" class="ui submit primary button">Become a Donor</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <br>
+    <div class="text-center" [innerHtml]="statusmessage"></div>
+</section>
