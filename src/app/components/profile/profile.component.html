@@ -1,43 +1,26 @@
 <div id="profile" class="ui small modal">
+    <h4 class="ui sub header">{{donor.firstname}}, {{donor.lastname}}</h4>
+    
     <div class="content">
-        <div class="ui card">
-            <div class="card">
-                <div class="content">
-                    <h4 class="ui sub header">{{donor.firstname}}, {{donor.lastname}}</h4>
-                    <div class="ui small feed">
-                        <div class="event">
-                            <div class="content">
-                                <div class="summary">
-                                    <a>Phone:</a> {{secret.phone}}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="event">
-                            <div class="content">
-                                <div class="summary">
-                                    <a>Email:</a> {{secret.email}}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="event">
-                            <div class="content">
-                                <div class="summary">
-                                    <a>Blood Group:</a> {{donor.blood_group}}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ui bottom attached button">
-                    <i class="unhide icon"></i> click to show
-                </div>
-            </div>
+        
+        <div>
+            <a>Phone:</a> {{secret.phone}}
         </div>
+        <div>
+            <a>Email:</a> {{secret.email}}
+        </div>
+        <div>
+            <a>Blood Group:</a> {{donor.blood_group}}
+        </div>
+        
     </div>
 
     <br>
 
     <div class="actions">
+        <button (click)="reveal()" class="ui button">
+            <i class="unhide icon"></i> Click to unhide
+        </button>
         <button class="ui negative button">Close</button>
     </div>
 </div>

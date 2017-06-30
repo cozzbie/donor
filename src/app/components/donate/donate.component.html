@@ -7,8 +7,9 @@
 
                 <div class="field">
                     <label>Your unique link</label>
-                    <div class="ui action input">
+                    <div class="ui action input left icon" [ngClass]="{loading: isSearching}" >
                         <input [formControl]="donorForm.controls['link']" [(ngModel)]="donorData.link" name="link" type="text" placeholder="EAVQWE">
+                        <i class="linkify icon"></i>
                     </div>
                 </div>
 
@@ -61,11 +62,11 @@
                 Become a Donor
             </button>
 
-            <button (click)="update()" *ngIf="donorForm.controls['link'].enabled" type="button" [ngClass]="{loading: transacting}" [disabled]="!donorForm.valid" class="ui submit primary button">
+            <button (click)="update()" *ngIf="donorForm.controls['link'].enabled" type="button" [ngClass]="{loading: transacting}" [disabled]="!donorData.firstname" class="ui submit primary button">
                 Update
             </button>
 
-            <button (click)="delete()" *ngIf="donorForm.controls['link'].enabled" type="button" [ngClass]="{loading: transacting}" [disabled]="!donorForm.valid" class="ui submit negative button">
+            <button (click)="delete()" *ngIf="donorForm.controls['link'].enabled" type="button" [ngClass]="{loading: transacting}" [disabled]="!donorData.firstname" class="ui inverted submit red button">
                 Delete
             </button>
         </div>

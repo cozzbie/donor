@@ -21,7 +21,10 @@ export class DonorService {
     }
 
     me(link): Observable<any> {
-        const obs = this.http.get(this.server + "api/me/" + link);
+        const params = new URLSearchParams();
+        params.set("link", link);
+
+        const obs = this.http.get(this.server + "api/me", { search: params });
         return this.processObservable(obs);
     }
 
@@ -39,7 +42,10 @@ export class DonorService {
     }
 
     delete(l): Observable<any> {
-        const obs = this.http.delete(this.server + "api/me/" + l);
+        const params = new URLSearchParams();
+        params.set("link", l);
+
+        const obs = this.http.delete(this.server + "api/me", { search: params });
         return this.processObservable(obs);
     }
 

@@ -22,6 +22,7 @@ export class AppComponent {
 
     openBioModal(e): void {
         this.donorData = e;
+        this.linked = false;
         $('#donate').modal('show');
     }
 

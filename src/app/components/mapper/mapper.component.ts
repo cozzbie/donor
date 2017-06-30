@@ -25,7 +25,7 @@ export class MapperComponent implements OnInit {
     userState: Observable<UserState>;
     user: User;
     isMapLoading = true;
-    mapinfo = "loading areas near you...";
+    mapinfo = "map rendering...";
     socket;
 
     constructor(private store: Store<AppState>, private esriLoader: EsriLoaderService, private socks: Socks, private donorSvc: DonorService) {
@@ -88,14 +88,7 @@ export class MapperComponent implements OnInit {
                         }
                     });
 
-                    pointGraphic.watch("click", function(evt){
-                        console.log("Should open profile", pointGraphic.attributes.person);
-                        showProfilePopup(pointGraphic.attributes.person);
-                    });
-
                     mapView.graphics.add(pointGraphic);
-
-                    // console.log("New location added", longlat);
                 }
 
                 function removeMarker(component): void {
@@ -130,8 +123,16 @@ export class MapperComponent implements OnInit {
                         location: pt
                     });
 
-                    showDonatePopup(address, pt);
+                    showDonatePopup.call(this, address, pt);
                 };
+
+                function requestDonors(){
+                    const center = mapView.extent.center;
+                    const persons = _.filter(mapView.graphics.items, graphic => graphic.attributes.type === "person");
+                    const ids = _.map(persons, person => person.attributes.person._id);
+
+                    this.socket.emit("request", { ids, center: [center.longitude, center.latitude] });
+                }
 
                 const map: any = new Map({
                     // basemap: 'hybrid',
@@ -167,26 +168,37 @@ export class MapperComponent implements OnInit {
 
                 mapView.ui.add(search, "top-right");
 
-                mapView.on("click touchstart", evt => {
-                    search.clear();
-                    mapView.popup.clear();
-                    const locatorSource = search.defaultSource;
-                    locatorSource.locator.locationToAddress(evt.mapPoint)
+                mapView.on("click", evt => {
+                    
+                    mapView.hitTest({ x: evt.x, y: evt.y })
                         .then(response => {
-                            const address = response.address.Match_addr;
-                            showMapPopup.call(this, address, evt.mapPoint);
-                        }, err => {
-                            console.log("It failed fam");
-                            showMapPopup.call(this, "No address found for this location.", evt.mapPoint);
-                        });
+                            if (response.results[0]){
+                                const graphic = response.results[0].graphic;
+                                showProfilePopup.call(this, graphic.attributes.person);
+                            }else{
+                                search.clear();
+                                mapView.popup.clear();
+                                const locatorSource = search.defaultSource;
+                                locatorSource.locator.locationToAddress(evt.mapPoint)
+                                    .then(resp => {
+                                        const address = resp.address.Match_addr;
+                                        showMapPopup.call(this, address, evt.mapPoint);
+                                    }, err => {
+                                        console.log("It failed fam");
+                                        showMapPopup.call(this, "No address found for this location.", evt.mapPoint);
+                                    });
+                            }
+                            
+                        }, e => console.log(e));
                 });
 
-                mapView.on("drag", evt => {
-                    const center = mapView.extent.center;
-                    const persons = _.filter(mapView.graphics.items, graphic => graphic.attributes.type === "person");
-                    const ids = _.map(persons, person => person.attributes.person._id);
-                    const point = [center.longitude, center.latitude];
+                const source = Observable.create(obs => {
+                    mapView.on("drag", evt => obs.next());
+                    mapView.on("mouse-wheel", evt => obs.next());
                 });
+
+                source.debounceTime(1000).subscribe(d => requestDonors.call(this));
+                
 
                 mapView.then(() => {
                     this.isMapLoading = false;
@@ -198,12 +210,12 @@ export class MapperComponent implements OnInit {
 
                 }, e => this.mapinfo = "Map loading error");
 
-                this.socket.on("coords", d => {
-                    _.each(d.donors, c => addMarker(c));
-                });
+                this.socket.on("joined", d => requestDonors.call(this));
+
+                this.socket.on("coords", d => _.each(d.donors, c => addMarker(c)));
 
                 this.socket.on("leave", d => {
-                    const person = _.find(mapView.graphics, graphic => (graphic.attributes.type === "person" && graphic.attributes.person._id === d._id));
+                    const person = _.find(mapView.graphics.items, graphic => (graphic.attributes.type === "person" && graphic.attributes.person._id === d.id));
                     if (person) removeMarker(person);
                 });
 

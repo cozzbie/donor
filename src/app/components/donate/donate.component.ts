@@ -3,6 +3,7 @@ import { FormControl, FormBuilder, FormGroup } from '@angular/forms';
 import { CustomNG2Validators } from "../../providers/custom-validators";
 import { DonorService } from '../../providers/donor';
 import { CustomValidators } from 'ng2-validation';
+import { Socks } from '../../providers/socks';
 
 import { Observable } from "rxjs/Rx";
 import { Store } from "@ngrx/store";
@@ -26,10 +27,11 @@ export class DonateComponent implements OnInit {
     donorState: Observable<UserState>;
     donor: User;
     transacting: boolean;
-    link = "";
     isLink = false;
     isSearching = false;
     notification: any = { status: false, header: "", message: "" };
+    socket;
+
     @Input() set dData(v) {
         if (v.address) Object.assign(this.donorData, { coords: { address: v.address, coordinates: [v.point.longitude, v.point.latitude] }});
     };
@@ -47,19 +49,20 @@ export class DonateComponent implements OnInit {
         }
     };
 
-    constructor(private store: Store<AppState>, private fb: FormBuilder, private donorSvc: DonorService) {
+    constructor(private store: Store<AppState>, private fb: FormBuilder, private donorSvc: DonorService, private socks: Socks) {
         this.donorState = <Observable<UserState>>store.select("user");
         this.donorState.subscribe(s => this.donor = s.user);
 
         this.donorForm = this.fb.group({
-            'link': [this.link, CustomNG2Validators.compose([])],
+            'link': [this.donorData.link, CustomNG2Validators.compose([])],
             'firstname': [this.donorData.firstname, CustomNG2Validators.compose([CustomNG2Validators.required, CustomNG2Validators.minLength(2)])],
             'lastname': [this.donorData.lastname, CustomNG2Validators.compose([CustomNG2Validators.required, CustomNG2Validators.minLength(2)])],
             'phone': [this.donorData.contact, CustomNG2Validators.compose([CustomNG2Validators.required, CustomValidators.phone])],
             'email': [this.donorData.email, CustomNG2Validators.compose([CustomNG2Validators.required, CustomValidators.email])],
-            'blood_group': [this.donorData.blood_group, CustomNG2Validators.compose([CustomNG2Validators.required, CustomNG2Validators.minLength(2), , CustomNG2Validators.maxLength(2)])],
+            'blood_group': [this.donorData.blood_group, CustomNG2Validators.compose([CustomNG2Validators.required, CustomNG2Validators.minLength(1), , CustomNG2Validators.maxLength(2)])],
         });
 
+        this.socket = socks.socket();
     }
 
     ngOnInit() {
@@ -70,11 +73,17 @@ export class DonateComponent implements OnInit {
             .filter(y => y && y.length === 6)
             .switchMap(search => {
                 this.isSearching = true;
-                return this.donorSvc.find(search);
+                return this.donorSvc.me(search);
             })
             .subscribe((res: any) => {
                 this.isSearching = false;
-                Object.assign(this.donorData, res.donor);
+
+                Object.assign(this.donorData, res.me);
+                if (this.donorData._id){
+                    _.each(this.donorForm.controls, (c, k) => {
+                        if (k !== "link") c.enable();
+                    });
+                }
                 this.hideMessage();
             }, e => {
                 console.log(e);
@@ -88,10 +97,10 @@ export class DonateComponent implements OnInit {
         this.donorSvc.create(this.donorData)
             .subscribe(d => {
                 this.transacting = false;
-                //this.store.dispatch({ type: "SET_USER", payload: d.donor })
                 if (d.success) {
-                    this.link = d.link;
-                    this.notification = { status: true, header: "Success", message: `Your submission was successful. Please save this link, <h4>${this.link}</h4> and use it to edit your entry if you feel the need to.` };
+                    this.donorData.link = d.link;
+                    this.notification = { status: true, header: "Success", message: `Your submission was successful. Please save this link, <h4>${this.donorData.link}</h4> and use it to edit your entry if you feel the need to.` };
+                    this.socket.emit("hasJoined");
                 } else this.notification = { status: false, header: "Error", message: "An error occured during submission. Please try again." };
             });
     }
@@ -112,6 +121,8 @@ export class DonateComponent implements OnInit {
             .subscribe(d => {
                 if (d.success) {
                     this.notification = { status: true, header: "Success", message: `You have successfully deleted your data.` };
+                    this.socket.emit("hasLeft", { id: this.donorData._id });
+                    this.donorData = {};
                 } else this.notification = { status: false, header: "Error", message: "An error occured. Please try again." };
             });
     }
