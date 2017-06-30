@@ -1,11 +1,11 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DonateComponent } from './donate.component';
+import { ProfileComponent } from './profile.component';
 import { AppModule } from '../../app.module';
 
-describe('DonateComponent', () => {
-    let component: DonateComponent;
-    let fixture: ComponentFixture<DonateComponent>;
+describe('ProfileComponent', () => {
+    let component: ProfileComponent;
+    let fixture: ComponentFixture<ProfileComponent>;
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
@@ -15,7 +15,7 @@ describe('DonateComponent', () => {
     }));
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(DonateComponent);
+        fixture = TestBed.createComponent(ProfileComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

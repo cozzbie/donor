@@ -1,1 +1,8 @@
-<app-mapper></app-mapper>
+<app-mapper (profilepopup)="openProfileModal($event)" (biopopup)="openBioModal($event)"></app-mapper>
+<app-donate [linked]="linked" [dData]="donorData"></app-donate>
+<app-donor [profile]="donorProfile"></app-donor>
+<div class="editables">
+    <button class="circular blue ui icon button" (click)="edit()">
+        <i class="icon settings"></i>
+    </button>
+</div>

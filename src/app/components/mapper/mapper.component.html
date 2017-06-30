@@ -1,1 +1,4 @@
 <div class="map-container" #map></div>
+<div *ngIf="isMapLoading" class="ui active dimmer">
+    <div class="ui text loader">{{mapinfo}}</div>
+</div>

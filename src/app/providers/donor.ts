@@ -7,24 +7,39 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/toPromise';
 
+import _ from "lodash";
+
 @Injectable()
-export class UserService {
+export class DonorService {
     server = environment.server;
     
     constructor(private http: Http) {}
 
-    donate(o): Observable<any> {
-        const obs = this.http.post(this.server + "web/user", o);
+    create(o): Observable<any> {
+        const obs = this.http.post(this.server + "api/me", o);
         return this.processObservable(obs);
     }
 
-    edit(o): Observable<any> {
-        const obs = this.http.post(this.server + "web/user", o);
+    me(link): Observable<any> {
+        const obs = this.http.get(this.server + "api/me/" + link);
         return this.processObservable(obs);
     }
 
-    delete(o): Observable<any> {
-        const obs = this.http.post(this.server + "web/user", o);
+    find(o: any[]): Observable<any> {
+        const params = new URLSearchParams();
+        _.each(o, v => params.append("coords", v));
+
+        const obs = this.http.get(this.server + "api/donors/", {search: params});
+        return this.processObservable(obs);
+    }
+
+    update(o): Observable<any> {
+        const obs = this.http.put(this.server + "api/me", o);
+        return this.processObservable(obs);
+    }
+
+    delete(l): Observable<any> {
+        const obs = this.http.delete(this.server + "api/me/" + l);
         return this.processObservable(obs);
     }
 

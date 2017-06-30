@@ -7,20 +7,29 @@ import {
     RequestOptions,
     XHRBackend
 } from '@angular/http';
+import { StoreModule, Store } from '@ngrx/store';
 import { CustomFormsModule } from 'ng2-validation';
 import { EsriLoaderModule } from 'angular-esri-loader';
 
 import { AppComponent } from './app.component';
 import { MapperComponent } from './components/mapper/mapper.component';
-import { UserService } from './providers/user';
+import { DonateComponent } from './components/donate/donate.component';
+import { ProfileComponent } from './components/profile/profile.component';
+
+import { DonorService } from './providers/donor';
+import { Socks } from './providers/socks';
 
 import { EsriLoaderService } from 'angular-esri-loader';
+
+import { UserReducer } from "./redux/user";
 
 
 @NgModule({
     declarations: [
         AppComponent,
-        MapperComponent
+        MapperComponent,
+        DonateComponent,
+        ProfileComponent
     ],
     imports: [
         BrowserModule,
@@ -28,9 +37,12 @@ import { EsriLoaderService } from 'angular-esri-loader';
         ReactiveFormsModule,
         HttpModule,
         CustomFormsModule,
-        EsriLoaderModule
+        EsriLoaderModule,
+        StoreModule.provideStore({
+            user: UserReducer,
+        }),
     ],
-    providers: [EsriLoaderService, UserService],
+    providers: [EsriLoaderService, DonorService, Socks],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -21,6 +21,8 @@
     "@angular/platform-browser": "^4.0.0",
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@angular/router": "^4.0.0",
+    "@ngrx/core": "^1.2.0",
+    "@ngrx/store": "^2.2.2",
     "angular-esri-loader": "^1.1.0",
     "angular2-moment": "^1.4.0",
     "async-es": "^2.5.0",

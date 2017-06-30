@@ -1,25 +1,26 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import { MapperComponent } from './mapper.component';
+import { AppModule } from '../../app.module';
 
-import { ArcgisMapperComponent } from './arcgis-mapper.component';
+describe('MapperComponent', () => {
+    let component: MapperComponent;
+    let fixture: ComponentFixture<MapperComponent>;
 
-describe('ArcgisMapperComponent', () => {
-  let component: ArcgisMapperComponent;
-  let fixture: ComponentFixture<ArcgisMapperComponent>;
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            imports: [AppModule]
+        })
+            .compileComponents();
+    }));
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ ArcgisMapperComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(() => {
+        fixture = TestBed.createComponent(MapperComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ArcgisMapperComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    it('should be created', () => {
+        expect(component).toBeTruthy();
+    });
 
-  it('should be created', () => {
-    expect(component).toBeTruthy();
-  });
 });
