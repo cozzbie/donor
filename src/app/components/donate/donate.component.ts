@@ -137,7 +137,10 @@ export class DonateComponent implements OnInit {
                     this.socket.emit("hasLeft", { id: this.donorData._id }); //On successful removal, broadcast to the rest of the donor world.
                     this.donorData = new User();
                     this.cdRef.detectChanges();
-                    setTimeout(() => this.closemodal.emit(), 3000);
+                    setTimeout(() => {
+                        this.closemodal.emit();
+                        this.hideMessage();
+                    }, 3000);
                 } else this.notification = { status: false, header: "Error", message: "An error occured. Please try again." };
             });
     }
