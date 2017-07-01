@@ -4,11 +4,8 @@ import { Socks } from '../../providers/socks';
 import { DonorService } from '../../providers/donor';
 
 import { Observable } from "rxjs/Rx";
-import { Store } from "@ngrx/store";
-import { AppState } from "../../redux/state";
-import { UserState } from "../../redux/user";
 
-import { User } from "../../interfaces/user";
+import { User } from "../../classes/user";
 
 import _ from "lodash";
 
@@ -18,20 +15,18 @@ import _ from "lodash";
     styleUrls: ['./mapper.component.scss']
 })
 export class MapperComponent implements OnInit {
-    @Output() biopopup: EventEmitter<any> = new EventEmitter<any>();
-    @Output() profilepopup: EventEmitter<any> = new EventEmitter<any>();
-    @ViewChild('map') mapElement: ElementRef;
-    geolocation: any[] = [9.0765, 7.3986];
-    userState: Observable<UserState>;
-    user: User;
+    @Output() biopopup: EventEmitter<any> = new EventEmitter<any>(); //Output events to app.component to open #donate modal
+    @Output() profilepopup: EventEmitter<any> = new EventEmitter<any>();  //Output events to app.component to open #profile modal
+    @ViewChild('map') mapElement: ElementRef; //Map element container
+
+    geolocation: any[] = [7.3986, 9.0765]; //The default location to load if users decide they dont want to allow geolocation
     isMapLoading = true;
     mapinfo = "map rendering...";
     socket;
 
-    constructor(private store: Store<AppState>, private esriLoader: EsriLoaderService, private socks: Socks, private donorSvc: DonorService) {
-        this.userState = <Observable<UserState>>store.select("user");
-        this.userState.subscribe(s => this.user = s.user);
+    constructor(private esriLoader: EsriLoaderService, private socks: Socks, private donorSvc: DonorService) {
 
+        //Test users browser for compatibilty
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(position => {
                 this.geolocation = [position.coords.longitude, position.coords.latitude];
@@ -45,7 +40,7 @@ export class MapperComponent implements OnInit {
     }
 
     init(g): any {
-        
+        //Load ARCGIS's lib
         return this.esriLoader.load({
             url: 'https://js.arcgis.com/4.3/'
         }).then(() => {
@@ -73,6 +68,12 @@ export class MapperComponent implements OnInit {
 
                 let mapView;
 
+                
+                /**
+                 * Adds a marker to the map
+                 * @param  {any} person
+                 */
+
                 function addMarker(person: any): void {
                     const point = new Point({
                         longitude: person.coords.coordinates[0],
@@ -91,10 +92,16 @@ export class MapperComponent implements OnInit {
                     mapView.graphics.add(pointGraphic);
                 }
 
+                /**
+                 * Removes a marker from the map
+                 * @param  {any} component -- Graphics component to be removed
+                 */
+
                 function removeMarker(component): void {
                     mapView.graphics.remove(component);
                 }
 
+                //Creates a specific type of marker
                 function createMarker(): any {
                     return new SimpleMarkerSymbol({
                         color: [225, 0, 0, 1],
@@ -108,13 +115,30 @@ export class MapperComponent implements OnInit {
                     });
                 }
 
+                /**
+                 * Emits a value to app.component to open up #profile modal
+                 * @param  {any} data
+                 */
+
                 function showProfilePopup(data) {
                     this.profilepopup.emit(data);
                 }
 
+                /**
+                 * Emits a value to app.component to open up #donor modal
+                 * @param  {any} address User geolocation coordinates
+                 * @param  {any} pt
+                 */
+
                 function showDonatePopup(address, pt) {
                     this.biopopup.emit({ address: address, point: pt });
                 }
+
+                /**
+                 * Loads ARCGIS map popup
+                 * @param  {any} address User physical address
+                 * @param  {any} pt Users geolocation coordinates
+                 */
 
                 function showMapPopup(address, pt) {
                     mapView.popup.open({
@@ -126,12 +150,19 @@ export class MapperComponent implements OnInit {
                     showDonatePopup.call(this, address, pt);
                 };
 
+                //Requests donors via the socket
                 function requestDonors(){
                     const center = mapView.extent.center;
                     const persons = _.filter(mapView.graphics.items, graphic => graphic.attributes.type === "person");
                     const ids = _.map(persons, person => person.attributes.person._id);
 
                     this.socket.emit("request", { ids, center: [center.longitude, center.latitude] });
+                }
+
+                //Load up markers smartly without slamming all the locations at once on the screen.
+                function smartLoadMarkers(donors){
+                    Observable.interval(500).take(donors.length)
+                        .subscribe(i => addMarker(donors[i]));
                 }
 
                 const map: any = new Map({
@@ -170,12 +201,15 @@ export class MapperComponent implements OnInit {
 
                 mapView.on("click", evt => {
                     
+                    //Detect if a marker has been hit
                     mapView.hitTest({ x: evt.x, y: evt.y })
                         .then(response => {
-                            if (response.results[0]){
+                            if (response.results[0]) {
+                                //If a marker is hit, lets display the information on the marker
                                 const graphic = response.results[0].graphic;
                                 showProfilePopup.call(this, graphic.attributes.person);
-                            }else{
+                            } else {
+                                //Else, prompt user with new form to join donor community 
                                 search.clear();
                                 mapView.popup.clear();
                                 const locatorSource = search.defaultSource;
@@ -192,108 +226,38 @@ export class MapperComponent implements OnInit {
                         }, e => console.log(e));
                 });
 
+                //We dont want a situation where every single pan/drag leads to a server request
+                //Observables handle this quite well.
+
                 const source = Observable.create(obs => {
                     mapView.on("drag", evt => obs.next());
                     mapView.on("mouse-wheel", evt => obs.next());
                 });
 
+                //Make sure user has stopped panning before loading new points.
                 source.debounceTime(1000).subscribe(d => requestDonors.call(this));
                 
 
+                //Load up the map
                 mapView.then(() => {
                     this.isMapLoading = false;
                     this.donorSvc.find(g)
-                        .subscribe(d => {
-                            Observable.interval(500).take(d.donors.length)
-                                .subscribe(i => addMarker(d.donors[i]));
-                        });
+                        .subscribe(d => smartLoadMarkers(d.donors));
 
                 }, e => this.mapinfo = "Map loading error");
 
+                //Lets us know someone knew has joined and requests new locations if applicable
                 this.socket.on("joined", d => requestDonors.call(this));
 
-                this.socket.on("coords", d => _.each(d.donors, c => addMarker(c)));
+                //Lets us handle the availability of new coordinates as map actions occur
+                this.socket.on("coords", d => smartLoadMarkers(d.donors));
 
+                //Lets us handle the removal of a person/donor
                 this.socket.on("leave", d => {
                     const person = _.find(mapView.graphics.items, graphic => (graphic.attributes.type === "person" && graphic.attributes.person._id === d.id));
                     if (person) removeMarker(person);
                 });
 
-                // mapView = new SceneView({
-                //     container: this.mapElement.nativeElement,
-                //     center: [-118.24368, 34.05293],
-                //     zoom: 12,
-                //     map
-                // });
-
-                // mapView.then(function () {
-                //     mapView.goTo({
-                //         center: [-118.35, 34.05],
-                //         tilt: 70,
-                //         zoom: 9
-                //     })
-                // });
-
-                // const featureLayer = new FeatureLayer({
-                //     url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads/FeatureServer/0",
-                //     outFields: ["TRL_NAME", "CITY_JUR", "LAT", "LON"],
-                //     popupTemplate: {
-                //         title: "{TRL_NAME}",
-                //         content: "This trail is in {CITY_JUR} and located at {LAT},{LON}."
-                //     }
-                // });
-
-                // map.add(featureLayer);
-
-                // const featureLayer2 = new FeatureLayer({
-                //     url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails/FeatureServer",
-                //     outFields: ["*"],
-                //     popupTemplate: {
-                //         title: "{TRL_NAME}",
-                //         content: "{*}"
-                //     },
-                //     definitionExpression: "ELEV_GAIN < 250"
-                // });
-
-                // const renderer = UniqueValueRenderer.fromJSON({
-                //     "type": "uniqueValue",
-                //     "field1": "USE_BIKE",
-                //     "uniqueValueInfos": [
-                //         {
-                //             "value": "Yes",
-                //             "label": "Yes",
-                //             "symbol": {
-                //                 "color": [
-                //                     0,
-                //                     112,
-                //                     255,
-                //                     255
-                //                 ],
-                //                 "width": 1.5,
-                //                 "type": "esriSLS",
-                //                 "style": "esriSLSSolid"
-                //             }
-                //         },
-                //         {
-                //             "value": "No",
-                //             "label": "No",
-                //             "symbol": {
-                //                 "color": [
-                //                     20,
-                //                     0,
-                //                     0,
-                //                     0
-                //                 ],
-                //                 "width": 1.5,
-                //                 "type": "esriSLS",
-                //                 "style": "esriSLSSolid"
-                //             }
-                //         }
-                //     ]
-                // });
-
-                // featureLayer2.renderer = renderer;
-                // map.add(featureLayer2);
             });
         });
     }

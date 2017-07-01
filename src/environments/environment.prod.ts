@@ -1,4 +1,4 @@
 export const environment = {
-    server: "",
+    server: "https://donorie.herokuapp.com/",
     production: true
 };

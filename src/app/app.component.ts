@@ -20,22 +20,32 @@ export class AppComponent {
         //this.loadExtScripts();
     };
 
+    //Opens up the #donate modal for the addition of a new donor
     openBioModal(e): void {
         this.donorData = e;
         this.linked = false;
         $('#donate').modal('show');
     }
 
+    //Opens up the #profile modal for the viewing of a remote donors details
     openProfileModal(e): void {
         this.profileData = e;
         $('#profile').modal('show');
     }
 
+    //Opens up the #donate modal for the viewing of a remote donors details
     edit(): void {
         this.linked = true;
         $('#donate').modal('show');
     }
 
+    //Close a modal
+    closemodal(): void {
+        this.linked = false;
+        $('#donate').modal('hide');
+    }
+
+    //If we have scripts we would love to load from external sources...heres a good place to load theem from
     loadExtScripts(): void {
         _.each(this.externals, v => {
             const node = document.createElement('script');

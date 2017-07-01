@@ -25,4 +25,9 @@ export class ProfileComponent implements OnInit {
         this.secret.phone = this.donor.phone;
     }
 
+    reset(): void {
+        this.secret.email = "hidden";
+        this.secret.phone = "hidden";
+    }
+
 }

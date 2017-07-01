@@ -7,7 +7,6 @@ import {
     RequestOptions,
     XHRBackend
 } from '@angular/http';
-import { StoreModule, Store } from '@ngrx/store';
 import { CustomFormsModule } from 'ng2-validation';
 import { EsriLoaderModule } from 'angular-esri-loader';
 
@@ -20,9 +19,6 @@ import { DonorService } from './providers/donor';
 import { Socks } from './providers/socks';
 
 import { EsriLoaderService } from 'angular-esri-loader';
-
-import { UserReducer } from "./redux/user";
-
 
 @NgModule({
     declarations: [
@@ -38,9 +34,6 @@ import { UserReducer } from "./redux/user";
         HttpModule,
         CustomFormsModule,
         EsriLoaderModule,
-        StoreModule.provideStore({
-            user: UserReducer,
-        }),
     ],
     providers: [EsriLoaderService, DonorService, Socks],
     bootstrap: [AppComponent]
