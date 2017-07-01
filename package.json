@@ -43,7 +43,6 @@
     "@types/arcgis-js-api": "^4.3.1",
     "@types/jasmine": "2.5.45",
     "@types/node": "~6.0.60",
-    "angular-cli-github-pages": "^0.2.0",
     "codelyzer": "~3.0.1",
     "jasmine-core": "~2.6.2",
     "jasmine-spec-reporter": "~4.1.0",

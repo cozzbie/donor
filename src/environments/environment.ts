@@ -4,6 +4,6 @@
 // The list of which env maps to which file can be found in `.angular-cli.json`.
 
 export const environment = {
-    server: "https://donors-cozzbie.c9users.io/",
+    server: "",
     production: false
 };

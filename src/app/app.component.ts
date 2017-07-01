@@ -40,7 +40,7 @@ export class AppComponent {
     }
 
     //Close a modal
-    closemodal(): void {
+    closemodal(e): void {
         this.linked = false;
         $('#donate').modal('hide');
     }
